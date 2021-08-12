@@ -11,7 +11,7 @@ function initApp() {
     addMember();
 }
 
-function addMember(){
+function addMember() {
     inquirer.prompt([{
         type: "input",
         message: "Enter team member's name",
@@ -83,7 +83,7 @@ function addMember(){
 
 }
 
-function startHTML(){
+function startHtml(){
     const html = `<!DOCTYPE html>
     <html lang="en">
     <head>
