@@ -1,10 +1,15 @@
 const Employee = require("../lib/Employee")
 
-describe("Employee", () => {
+describe("Employee class", () => {
+
+    describe("Instantiation", () => { 
     it("Should create Employee instance", () => {
-        const employee = new Employee();
-        expect(typeof(employee)).toEqual("object");
+        const input = new Employee();
+        expect(typeof(input)).toBe("object");
+        })
     });
+
+    describe("Constructors", () => {
 
     it("Should set name of employee", () => {
         const name = "Samuel";
@@ -23,7 +28,8 @@ describe("Employee", () => {
     it("Should set email of employee", () => {
         const value = "myemail@gmail.com";
         const employee = new Employee("Foo", 1, value);
-        expect(employee.email).toEqual(value);
+        expect(employee.email).toEqual(email);
+        })
     })
 
     describe("getName", () => {
