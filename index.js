@@ -1,186 +1,139 @@
-const inquirer = require("inquirer");
-const fs = require("fs");
-const Engineer = require("./lib/Engineer");
-const Intern = require("./lib/Intern");
-const Manager = require("./lib/Manager");
+const fs = require('fs');
+const inquirer = require('inquirer');
+const jest = require('jest');
+const Employee = require('./lib/Employee');
+const Engineer = require('./lib/Engineer');
+const Intern = require('./lib/Intern');
+const Manager = require('./lib/Manager');
+const generate = require('./src/genesis');
 
-const employees = [];
+const team = [];
 
-function initApp() {
-    startHtml();
-    addMember();
-}
+// houses all of the inquirer functionality; prompts the user for all information to be used for HTML
+const start = () => {
 
-function addMember() {
-    inquirer.prompt([{
-        type: "input",
-        message: "Enter team member's name",
-        name: "name"
+  // begins by prompting user for manager information
+  const managerInput = () => {
+    inquirer.prompt([
+    {
+      name: "managerName",
+      type: 'input',
+      message: "Please enter the name of the project manager."
     },
     {
-        type: "list",
-        message: "Select team member's role",
-        choices:[
-            "Engineer",
-            "Intern",
-            "Manager"
-        ],
-        name: "role"
+      name: "managerId",
+      type: 'input',
+      message: "Please enter the manager's ID number."
     },
     {
-        type: "input",
-        message: "Enter team member's id",
-        name: "id",
+      name: "managerEmail",
+      type: 'input',
+      message: "Please enter the manager's email address."
     },
     {
-        type: "input",
-        message: "Enter team member's email address",
-        name: "email",
-    }])
-    .then(function({name, role, id, email}){
-        let roleInfo = "";
-        if (role === "Engineer") {
-            roleInfo = "Github User";
-        } else if (role === "Intern") {
-            roleInfo = "school name";
-        } else {
-            roleInfo = "office number";
-        }
-        inquirer.prompt([{
-            type: "input",
-            message: "Enter team member's ${roleInfo}",
-            name: "roleInfo"
-        },
-        {
-            type: "list",
-            message: "would you like to add more team members?",
-            choices: [
-                "yes",
-                "no"
-            ],
-            name: "addmembers"
-        }])
-        .then(function({roleInfo, addmembers}){
-            let newMember;
-            if (role === "Engineer"){
-                newMember = new Engineer(name, id, email, roleInfo);
-            } else if (role === "Intern") {
-                newMember = new Intern(name, id, email, roleInfo);
-            } else {
-                newMember = new Manager(name, id, email, roleInfo);
-            }
-            employees.push(newMember);
-            addHtml(newMember)
-            .then(function(){
-                if (addmembers === "yes"){
-                    addMember();
-                } else {
-                    finishHtml();
-                }
-            });
-        });
-    });
+      name: "officeNumber",
+      type: 'input',
+      message: "Please enter the manager's office number."
+    }
+    ]).then(resp => {
+      const manager = new Manager(resp.managerName, resp.managerId, resp.managerEmail, resp.officeNumber);
+      team.push(manager);
+      buildTeam();
+    })
+  }
 
+  // user determines which type of member to build or if the team is complete
+  const buildTeam = () => {
+    inquirer.prompt([
+      {
+        name: "memberType",
+        type: 'list',
+        message: "What type of member are you adding to the team?",
+        choices: ["Engineer", "Intern", "None; my team is complete."]
+      }
+    ]).then(resp => {
+      switch(resp.memberType){
+        case "Engineer":
+          addEngineer();
+          break;
+        case "Intern":
+          addIntern();
+          break;
+
+        default:
+          renderTeam();
+      }
+    })
+  }
+
+  // user builds engineer
+  const addEngineer = () => {
+    inquirer.prompt([
+      {
+        name: "engineerName",
+        type: 'input',
+        message: "Please enter the engineer's name."
+      },
+      {
+        name: "engineerId",
+        type: 'input',
+        message: "Please enter the engineer's ID number."
+      },
+      {
+        name: "engineerEmail",
+        type: 'input',
+        message: "Please enter the engineer's email address."
+      },
+      {
+        name: "gitHub",
+        type: 'input',
+        message: "Please enter the engineer's GitHub profile name."
+      }
+    ]).then(resp => {
+      const engineer = new Engineer(resp.engineerName, resp.engineerId, resp.engineerEmail, resp.gitHub);
+      team.push(engineer);
+      buildTeam();
+    })
+  }
+
+  // user builds intern
+  const addIntern = () => {
+    inquirer.prompt([
+      {
+        name: "internName",
+        type: 'input',
+        message: "Please enter the intern's name."
+      },
+      {
+        name: "internId",
+        type: 'input',
+        message: "Please enter the intern's ID number."
+      },
+      {
+        name: "internEmail",
+        type: 'input',
+        message: "Please enter the intern's email address."
+      },
+      {
+        name: "school",
+        type: 'input',
+        message: "Please enter the school that the intern attended."
+      }
+    ]).then(resp => {
+      const intern = new Intern(resp.internName, resp.internId, resp.internEmail, resp.school);
+      team.push(intern);
+      buildTeam();
+    })
+  }
+
+  // uses exported function from genesis.js in src folder to render final HTML based on user input
+  const renderTeam = () => {
+    fs.writeFile('./output/team-profile.html', generate(team), (error) => {
+      (error) ? console.log(error) : console.log("Your Team web page is complete!")
+    })
+  }
+
+  managerInput();
 }
 
-function startHtml(){
-    const html = `<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
-        <title>Team Profile</title>
-    </head>
-    <body>
-        <nav class="navbar navbar-dark bg-dark mb-5">
-            <span class="navbar-brand mb-0 h1 w-100 text-center">Team Profile</span>
-        </nav>
-        <div class="container">
-            <div class="row">`;
-    fs.writeFile("./finalProduct/employee.html", html, function(error){
-        if (err) {
-            console.log(err);
-        }
-    });
-    console.log("start");        
-}
-
-function addHtml(employee) {
-    return new Promise(function(resolve, reject){
-        const name = employee.getName();
-        const role = employee.getRole();
-        const id = employee.getId();
-        const email = employee.getEmail();
-        let data = "";
-        if (role === "Engineer") {
-            const gitHub = employee.getGithub();
-            data = `<div class="container">
-            <div class="row">;
-                <div class="col-6">
-                    <div class="card mx-auto mb-3" style="width: 18rem">
-                    <h5 class="card-header">${name}<br /><br />Engineer</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">ID: ${id}</li>
-                        <li class="list-group-item">Email Address: ${email}</li>
-                        <li class="list-group-item">GitHub: ${gitHub}</li>
-                    </ul>
-                    </div>
-                </div>`;
-
-        }  else if (role === "Intern"){
-            const school = employee.getSchool();
-            data = `<div class="container">
-            <div class="row">;
-                <div class="col-6">
-                    <div class="card mx-auto mb-3" style="width: 18rem">
-                    <h5 class="card-header">${name}<br /><br />Engineer</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">ID: ${id}</li>
-                        <li class="list-group-item">Email Address: ${email}</li>
-                        <li class="list-group-item">School: ${school}</li>
-                    </ul>
-                    </div>
-                </div>`;
-        } else {
-            const officeNumber = member.getOfficeNumber();
-            data = `<div class="container">
-            <div class="row">;
-                <div class="col-6">
-                    <div class="card mx-auto mb-3" style="width: 18rem">
-                    <h5 class="card-header">${name}<br /><br />Engineer</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">ID: ${id}</li>
-                        <li class="list-group-item">Email Address: ${email}</li>
-                        <li class="list-group-item">Office Number: ${officeNumber}</li>
-                    </ul>
-                    </div>
-                </div>`
-        }
-        console.log("adding team member");
-        fs.appendFile("./finalProduct/employee.html", data, function (err){
-            if (err) {
-                return reject(err);
-            };
-            return resolve();
-        });
-    });
-}
-
-function finsihHtml() { 
-    const html = `</div>
-    </div> 
-    </body>
-    </html>`;
-
-        fs.appendFile("./finalProduct/employee.html", html, function(err){
-            if (err) {
-                console.log(err);
-            };
-        });
-        console.log("end");
-
-}
-
-initApp();
+start();
