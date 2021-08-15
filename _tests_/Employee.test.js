@@ -28,7 +28,7 @@ describe("Employee class", () => {
     it("Should set email of employee", () => {
         const value = "myemail@gmail.com";
         const employee = new Employee("Foo", 1, value);
-        expect(employee.email).toEqual(email);
+        expect(employee.email).toEqual(value);
         })
     })
 
